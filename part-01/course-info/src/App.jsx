@@ -1,29 +1,29 @@
-const Header = (props) => {
+const Header = ({ course: { name } }) => {
   return (
-    <h1>{props.course}</h1>
+    <h1>{name}</h1>
   )
 }
 
-const Part = (props) => {
+const Part = ({ part: { name, exercises } }) => {
   return (
-    <p>{props.name}: {props.exerciseCount}</p>
+    <p>{name}: {exercises}</p>
   )
 }
 
-const Content = (props) => {
+const Content = ({ course: { parts } }) => {
   return (
     <div>
-      <Part name={props.parts[0].name} exerciseCount={props.parts[0].exerciseCount} />
-      <Part name={props.parts[1].name} exerciseCount={props.parts[1].exerciseCount} />
-      <Part name={props.parts[2].name} exerciseCount={props.parts[2].exerciseCount} />
+      <Part part={parts[0]} />
+      <Part part={parts[1]} />
+      <Part part={parts[2]} />
     </div>
   )
 }
 
-const Total = (props) => {
+const Total = ({ course: { parts } }) => {
   let sum = 0;
-  for (const n of props.counts) {
-    sum += Number.parseInt(n);
+  for (const p of parts) {
+    sum += Number.parseInt(p.exercises);
   }
 
   return (
@@ -32,23 +32,20 @@ const Total = (props) => {
 }
 
 const App = () => {
-  const course = 'Half Stack application development';
-  const part1 = 'Fundamentals of React';
-  const exercises1 = 10;
-  const part2 = 'Using props to pass data';
-  const exercises2 = 7;
-  const part3 = 'State of a component';
-  const exercises3 = 14;
+  const course = {
+    name: 'Half Stack application development',
+    parts: [
+      { name: 'Fundamentals of React', exercises: 10 },
+      { name: 'Using props to pass data', exercises: 7 },
+      { name: 'State of a component', exercises: 14 }
+    ]
+  };
 
   return (
     <div>
       <Header course={course} />
-      <Content parts={[
-        { name: part1, exerciseCount: exercises1 },
-        { name: part2, exerciseCount: exercises2 },
-        { name: part3, exerciseCount: exercises3 }
-      ]} />
-      <Total counts={[exercises1, exercises2, exercises3]} />
+      <Content course={course} />
+      <Total course={course} />
     </div>
   )
 }
