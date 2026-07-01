@@ -19,8 +19,10 @@ function Listing({ persons, setPersons, filterText }) {
 
   return (
     <ul>
-      {persons.filter(
-        person => person.name.toLowerCase().indexOf(filterText) >= 0).map(person =>
+      {persons
+        .filter(person => person.name.toLowerCase().indexOf(filterText) >= 0)
+        .sort((a, b) => a.name.split(' ')[1].localeCompare(b.name.split(' ')[1]))
+        .map(person =>
           <Entry key={person.id} person={person} handleClick={makeDeleteHandler(person)} />
         )}
     </ul>
@@ -62,14 +64,25 @@ function NewEntryForm({ persons, setPersons }) {
   const addEntry = event => {
     event.preventDefault();
 
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} has already been added to the directory`);
-    } else {
-      const newPerson = {
-        name: newName,
-        number: newNumber
-      };
+    const newPerson = {
+      name: newName,
+      number: newNumber
+    };
 
+    if (persons.some(person => person.name === newPerson.name)) {
+      if (confirm(`${newName} is already in the phonebook. Replace the old number?`)) {
+        const oldPerson = persons.find(person => person.name === newPerson.name);
+        const updatedPerson = { ...oldPerson, number: newNumber };
+        personService.update(updatedPerson)
+          .then(data => {
+            setPersons(persons.filter(person => person.id !== data.id).concat(updatedPerson))
+          })
+          .then(() => {
+            setNewName('');
+            setNewNumber('');
+          })
+      }
+    } else {
       personService.create(newPerson)
         .then(data => setPersons(persons.concat(data)))
         .then(() => {
