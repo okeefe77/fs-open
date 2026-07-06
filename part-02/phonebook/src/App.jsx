@@ -1,5 +1,6 @@
-import personService from './services/persons';
 import { useState, useEffect } from 'react';
+import personService from './services/persons';
+import { SuccessMessage, ErrorMessage } from './components/Notification';
 
 function Entry({ person: { id, name, number }, handleClick }) {
   return (
@@ -7,12 +8,21 @@ function Entry({ person: { id, name, number }, handleClick }) {
   )
 }
 
-function Listing({ persons, setPersons, filterText }) {
+function Listing({ persons, setPersons, filterText, setSuccessMessage, setErrorMessage }) {
+  const removeListing = id => {
+    setPersons(persons.filter(person => person.id !== id))
+  };
+
   const makeDeleteHandler = p => {
     return () => {
       if (confirm(`Delete ${p.name}?`)) {
         personService.remove(p.id)
-          .then(data => setPersons(persons.filter(person => person.id !== data.id)));
+          .then(data => removeListing(data.id))
+          .then(() => setSuccessMessage(`Entry for ${p.name} removed`))
+          .catch(() => {
+            removeListing(p.id);
+            setErrorMessage(`Entry for ${p.name} was already removed from the server`);
+          });
       }
     }
   }
@@ -42,19 +52,25 @@ function Filter({ filterText, setFilterText }) {
   );
 }
 
-function Directory({ persons, setPersons }) {
+function Directory({ persons, setPersons, setSuccessMessage, setErrorMessage }) {
   const [filterText, setFilterText] = useState('');
 
   return (
     <div>
       <h2>Numbers</h2>
       <Filter filterText={filterText} setFilterText={setFilterText} />
-      <Listing persons={persons} filterText={filterText} setPersons={setPersons} />
+      <Listing
+        persons={persons}
+        filterText={filterText}
+        setPersons={setPersons}
+        setSuccessMessage={setSuccessMessage}
+        setErrorMessage={setErrorMessage}
+      />
     </div>
   );
 }
 
-function NewEntryForm({ persons, setPersons }) {
+function NewEntryForm({ persons, setPersons, setSuccessMessage }) {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
 
@@ -77,6 +93,7 @@ function NewEntryForm({ persons, setPersons }) {
           .then(data => {
             setPersons(persons.filter(person => person.id !== data.id).concat(updatedPerson))
           })
+          .then(() => setSuccessMessage(`Number for ${updatedPerson.name} updated successfully`))
           .then(() => {
             setNewName('');
             setNewNumber('');
@@ -85,6 +102,7 @@ function NewEntryForm({ persons, setPersons }) {
     } else {
       personService.create(newPerson)
         .then(data => setPersons(persons.concat(data)))
+        .then(() => setSuccessMessage(`Entry added for ${newPerson.name}`))
         .then(() => {
           setNewName('');
           setNewNumber('');
@@ -93,35 +111,57 @@ function NewEntryForm({ persons, setPersons }) {
   }
 
   return (
-    <form onSubmit={addEntry}>
-      <div>
-        <label>Name: </label>
-        <input value={newName} onChange={handleNewNameChange} />
-      </div>
-      <div>
-        <label>Number: </label>
-        <input value={newNumber} onChange={handleNewNumberChange} />
-      </div>
-      <div>
-        <button type="submit">Add</button>
-      </div>
-    </form>
+    <div>
+      <h2>Add New Entry</h2>
+      <form onSubmit={addEntry}>
+        <div>
+          <label>Name: </label>
+          <input value={newName} onChange={handleNewNameChange} />
+        </div>
+        <div>
+          <label>Number: </label>
+          <input value={newNumber} onChange={handleNewNumberChange} />
+        </div>
+        <div>
+          <button type="submit">Add</button>
+        </div>
+      </form>
+    </div>
   );
 }
 
 function App() {
   const [persons, setPersons] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(undefined);
+  const [errorMessage, setErrorMessage] = useState(undefined);
 
   useEffect(() => {
     personService.getAll()
       .then(data => setPersons(data));
   }, []);
 
+  const notifySuccess = message => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(undefined), 3000);
+  }
+
+  const notifyError = message => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(undefined), 4000);
+  }
+
   return (
     <div>
       <h1>Phonebook</h1>
-      <NewEntryForm persons={persons} setPersons={setPersons} />
-      <Directory persons={persons} setPersons={setPersons} />
+      <SuccessMessage message={successMessage} />
+      <ErrorMessage message={errorMessage} />
+      <NewEntryForm persons={persons} setPersons={setPersons} setSuccessMessage={notifySuccess} />
+      <Directory
+        persons={persons}
+        setPersons={setPersons}
+        setSuccessMessage={notifySuccess}
+        setErrorMessage={notifyError}
+      />
     </div>
   )
 }

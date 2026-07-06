@@ -14,7 +14,7 @@ const update = updatedPerson => service.put(`/${updatedPerson.id}`, updatedPerso
 const remove = id => service.delete(`/${id}`)
   .then(response => response.data);
 
-export default {
+export {
   getAll,
   create,
   update,
