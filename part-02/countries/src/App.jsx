@@ -57,6 +57,39 @@ const CountryList = ({ countries, setCountryList }) => {
   }
 }
 
+const WeatherInfo = ({ country }) => {
+  const api_key = import.meta.env.VITE_WEATHER_KEY;
+  const capital = country.capital[0];
+  const [lat, lon] = country.capitalInfo.latlng;
+  const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?units=metric&lat=${lat}&lon=${lon}&appid=${api_key}`
+
+  const [weatherData, setWeatherData] = useState(undefined);
+
+  useEffect(() => {
+    axios.get(weatherUrl)
+      .then(response => setWeatherData(response.data));
+  })
+
+  if (weatherData) {
+    return (
+      <div>
+        <h3>Weather in {capital}</h3>
+        <h4>{weatherData.weather[0].description}</h4>
+        <img
+          alt={weatherData.weather[0].description}
+          src={`https://openweathermap.org/payload/api/media/file/${weatherData.weather[0].icon}.png`}
+        />
+        <dl>
+          <dt>Temperature</dt>
+          <dd>{weatherData.main.temp}° C</dd>
+          <dt>Wind</dt>
+          <dd>{weatherData.wind.speed} m/s</dd>
+        </dl>
+      </div>
+    )
+  }
+}
+
 const CountryInfo = ({ country }) => {
   return (
     <div>
@@ -79,6 +112,7 @@ const CountryInfo = ({ country }) => {
           </ul>
         </dd>
       </dl>
+      <WeatherInfo country={country} />
     </div>
   )
 }
