@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const service = axios.create({ baseURL: "http://localhost:3001/api/persons" });
+const service = axios.create({ baseURL: "/api/persons" });
 
 const getAll = () => service.get()
   .then(response => response.data);
