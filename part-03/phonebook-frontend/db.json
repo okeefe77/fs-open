@@ -1,0 +1,25 @@
+{
+  "persons": [
+    {
+      "name": "Arto Hellas",
+      "number": "(716) 578-4323",
+      "id": "1"
+    },
+    {
+      "name": "Ada Lovelace",
+      "number": "(716) 555-1234",
+      "id": "2"
+    },
+    {
+      "name": "Dan Abramov",
+      "number": "12-43-234345",
+      "id": "3"
+    },
+    {
+      "name": "Mary Poppendieck",
+      "number": "39-23-6423122",
+      "id": "4"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
