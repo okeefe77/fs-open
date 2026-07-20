@@ -1,5 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
+const Person = require('./models/person');
+
 const app = express();
 
 app.use(express.json());
@@ -55,19 +57,17 @@ app.get('/info', (req, res) => {
 });
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons);
+  Person.find({})
+    .then(persons => {
+      res.json(persons);
+    })
 });
 
 app.get('/api/persons/:id', (req, res) => {
   const id = req.params.id;
-  const person = persons.find(p => p.id === id);
-
-  if (person) {
+  Person.findById(id).then(person => {
     res.json(person);
-  } else {
-    res.statusMessage = "Person not found";
-    res.status(400).end();
-  }
+  })
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -98,15 +98,16 @@ app.post('/api/persons', (req, res) => {
     })
   }
 
-  const newPerson = {
+  const newPerson = new Person({
     name,
-    number,
-    id: genId()
-  }
+    number
+  })
 
-  persons = persons.concat(newPerson);
-  res.json(newPerson);
-})
+  newPerson.save()
+    .then(savedPerson => {
+      res.json(savedPerson)
+    });
+});
 
 const PORT = process.env.port || 3001;
 app.listen(PORT, '0.0.0.0', () => {
