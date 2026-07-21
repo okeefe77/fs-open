@@ -17,7 +17,7 @@ function Listing({ persons, setPersons, filterText, setSuccessMessage, setErrorM
     return () => {
       if (confirm(`Delete ${p.name}?`)) {
         personService.remove(p.id)
-          .then(data => removeListing(data.id))
+          .then(response => removeListing(response.id))
           .then(() => setSuccessMessage(`Entry for ${p.name} removed`))
           .catch(() => {
             removeListing(p.id);

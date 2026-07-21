@@ -4,8 +4,8 @@ const Person = require('./models/person');
 
 const app = express();
 
-app.use(express.json());
 app.use(express.static('static'));
+app.use(express.json());
 
 morgan.token('body', (req, res) => {
   if (req.method === 'POST') {
@@ -16,44 +16,17 @@ morgan.token('body', (req, res) => {
 });
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
-let persons = [
-  {
-    "id": "1",
-    "name": "Arto Hellas",
-    "number": "040-123456"
-  },
-  {
-    "id": "2",
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523"
-  },
-  {
-    "id": "3",
-    "name": "Dan Abramov",
-    "number": "12-43-234345"
-  },
-  {
-    "id": "4",
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122"
-  }
-];
-
-const genId = () => {
-  const MIN = 100000;
-  const MAX = 999999;
-  return Math.floor(Math.random() * (MAX - MIN) + MIN).toString();
-}
-
-const exists = name => persons.some(p => p.name === name);
-
 
 app.get('/info', (req, res) => {
   const reqTime = new Date().toString();
-  res.send(
-    `<p>Phonebook has info for ${persons.length} people</p>
-     <p>${reqTime}</p>`
-  );
+
+  Person.find({})
+    .then(persons => {
+      res.send(
+        `<p>Phonebook has info for ${persons.length} people</p>
+         <p>${reqTime}</p>`
+      );
+    })
 });
 
 app.get('/api/persons', (req, res) => {
@@ -70,10 +43,13 @@ app.get('/api/persons/:id', (req, res) => {
   })
 });
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   const id = req.params.id;
-  persons = persons.filter(p => p.id !== id);
-  res.json({ id });
+  Person.findByIdAndDelete(id)
+    .then(result => {
+      res.status(200).json({ id });
+    })
+    .catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -92,12 +68,6 @@ app.post('/api/persons', (req, res) => {
     });
   }
 
-  if (exists(name)) {
-    return res.status(400).json({
-      "error": "person already exists"
-    })
-  }
-
   const newPerson = new Person({
     name,
     number
@@ -108,6 +78,36 @@ app.post('/api/persons', (req, res) => {
       res.json(savedPerson)
     });
 });
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const id = req.params.id;
+  const { name, number } = req.body;
+
+  Person.findById(id)
+    .then(person => {
+      if (!person) return res.status(404).end();
+      person.name = name;
+      person.number = number;
+
+      person.save()
+        .then(updatedPerson => {
+          res.json(updatedPerson);
+        })
+    })
+    .catch(error => next(error));
+})
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message);
+
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'Malformed ID' });
+  }
+
+  next(error);
+}
+
+app.use(errorHandler);
 
 const PORT = process.env.port || 3001;
 app.listen(PORT, '0.0.0.0', () => {
