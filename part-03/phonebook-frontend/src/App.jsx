@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import personService from './services/persons';
 import { SuccessMessage, ErrorMessage } from './components/Notification';
 
+// import axios from 'axios';
+
 function Entry({ person: { id, name, number }, handleClick }) {
   return (
     <li key={id}><strong>{name}</strong> {number} <button onClick={handleClick}>💣</button></li>
@@ -70,7 +72,7 @@ function Directory({ persons, setPersons, setSuccessMessage, setErrorMessage }) 
   );
 }
 
-function NewEntryForm({ persons, setPersons, setSuccessMessage }) {
+function NewEntryForm({ persons, setPersons, setSuccessMessage, setErrorMessage }) {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
 
@@ -94,7 +96,8 @@ function NewEntryForm({ persons, setPersons, setSuccessMessage }) {
             setPersons(persons.filter(person => person.id !== data.id).concat(updatedPerson))
           })
           .then(() => setSuccessMessage(`Number for ${updatedPerson.name} updated successfully`))
-          .then(() => {
+          .catch(error => setErrorMessage(error.response.data.error))
+          .finally(() => {
             setNewName('');
             setNewNumber('');
           })
@@ -103,7 +106,10 @@ function NewEntryForm({ persons, setPersons, setSuccessMessage }) {
       personService.create(newPerson)
         .then(data => setPersons(persons.concat(data)))
         .then(() => setSuccessMessage(`Entry added for ${newPerson.name}`))
-        .then(() => {
+        .catch(error => {
+          setErrorMessage(error.response.data.error);
+        })
+        .finally(() => {
           setNewName('');
           setNewNumber('');
         })
@@ -147,7 +153,7 @@ function App() {
 
   const notifyError = message => {
     setErrorMessage(message);
-    setTimeout(() => setErrorMessage(undefined), 4000);
+    setTimeout(() => setErrorMessage(undefined), 5000);
   }
 
   return (
@@ -155,7 +161,7 @@ function App() {
       <h1>Phonebook</h1>
       <SuccessMessage message={successMessage} />
       <ErrorMessage message={errorMessage} />
-      <NewEntryForm persons={persons} setPersons={setPersons} setSuccessMessage={notifySuccess} />
+      <NewEntryForm persons={persons} setPersons={setPersons} setSuccessMessage={notifySuccess} setErrorMessage={notifyError} />
       <Directory
         persons={persons}
         setPersons={setPersons}
