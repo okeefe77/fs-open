@@ -46,7 +46,7 @@ app.get('/api/persons/:id', (req, res) => {
 app.delete('/api/persons/:id', (req, res, next) => {
   const id = req.params.id;
   Person.findByIdAndDelete(id)
-    .then(result => {
+    .then(() => {
       res.status(200).json({ id });
     })
     .catch(error => next(error))
@@ -58,13 +58,13 @@ app.post('/api/persons', (req, res, next) => {
 
   if (!name) {
     return res.status(400).json({
-      "error": "name is missing"
+      'error': 'name is missing'
     });
   }
 
   if (!number) {
     return res.status(400).json({
-      "error": "number is missing"
+      'error': 'number is missing'
     });
   }
 
